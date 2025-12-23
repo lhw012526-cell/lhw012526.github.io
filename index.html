@@ -1,0 +1,981 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>맞춤법 OX 퀴즈 (집중형)</title>
+  <style>
+    :root{
+      --bg:#f7f8fb;
+      --card:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --primary:#2563eb;
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --shadow: 0 14px 34px rgba(17,24,39,.10);
+      --radius: 18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Noto Sans KR", Arial, "Apple SD Gothic Neo", sans-serif;
+      background:
+        radial-gradient(1200px 700px at 15% -10%, rgba(37,99,235,.10), transparent 60%),
+        radial-gradient(900px 600px at 90% 0%, rgba(99,102,241,.08), transparent 55%),
+        var(--bg);
+      color:var(--text);
+    }
+    .shell{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px 16px 24px;
+    }
+
+    /* Header */
+    .header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      padding: 14px 14px;
+      border:1px solid rgba(229,231,235,.85);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.80);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .title{
+      display:flex; gap:10px; align-items:flex-start;
+      min-width: 260px;
+    }
+    .mark{
+      width:40px; height:40px; border-radius: 14px;
+      background: linear-gradient(135deg, rgba(37,99,235,.95), rgba(99,102,241,.90));
+      color:#fff; font-weight:900;
+      display:grid; place-items:center;
+      box-shadow: 0 16px 28px rgba(37,99,235,.18);
+      flex:0 0 auto;
+    }
+    .title h1{ margin:0; font-size:16px; letter-spacing:-.3px; }
+    .title p{ margin:6px 0 0; font-size:12px; color:var(--muted); line-height:1.35; }
+
+    .controls{
+      display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .btn{
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.90);
+      color:var(--text);
+      padding:9px 11px;
+      border-radius: 12px;
+      font-size:13px;
+      cursor:pointer;
+      transition: transform .05s ease, box-shadow .15s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{ box-shadow: 0 10px 26px rgba(17,24,39,.10); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(37,99,235,.22);
+      background: rgba(37,99,235,.10);
+      color: var(--primary);
+      font-weight: 800;
+    }
+    .btn.danger{
+      border-color: rgba(220,38,38,.22);
+      background: rgba(220,38,38,.08);
+      color: var(--bad);
+      font-weight: 800;
+    }
+    .toggle{
+      display:flex; align-items:center; gap:8px;
+      padding: 9px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.88);
+      font-size:13px;
+      color:var(--muted);
+    }
+    .switch{
+      width:44px; height:24px; border-radius:999px;
+      border:1px solid rgba(229,231,235,.9);
+      background: rgba(229,231,235,.9);
+      position:relative;
+      cursor:pointer;
+      flex:0 0 auto;
+    }
+    .switch::after{
+      content:"";
+      width:20px; height:20px;
+      border-radius:999px;
+      background:#fff;
+      position:absolute;
+      top:1px; left:1px;
+      transition: left .2s ease, background .2s ease, box-shadow .2s ease;
+      box-shadow: 0 8px 18px rgba(17,24,39,.18);
+    }
+    .switch.on{
+      background: rgba(22,163,74,.20);
+      border-color: rgba(22,163,74,.25);
+    }
+    .switch.on::after{ left:22px; }
+
+    /* Main */
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+    }
+    @media (max-width: 880px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(229,231,235,.85);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    /* Status */
+    .status{
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid rgba(229,231,235,.85);
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.70));
+    }
+    .status-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding: 8px 10px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      font-size:12px;
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .pill strong{ color: var(--text); font-weight: 800; }
+    .bar{
+      margin-top: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(229,231,235,.90);
+      overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(37,99,235,.95), rgba(99,102,241,.92));
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+
+    /* Question */
+    .qwrap{
+      padding: 18px 16px 16px;
+    }
+    .qno{
+      display:flex; align-items:center; justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 10px;
+    }
+    .qno .left{
+      display:flex; align-items:center; gap:10px;
+    }
+    .badge{
+      width: 42px; height: 42px;
+      border-radius: 16px;
+      display:grid; place-items:center;
+      font-weight: 900;
+      background: rgba(37,99,235,.10);
+      color: var(--primary);
+      border: 1px solid rgba(37,99,235,.18);
+      flex:0 0 auto;
+    }
+    .qmeta{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .qmeta .main{
+      font-weight: 900;
+      letter-spacing: -.2px;
+    }
+    .qmeta .sub{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .tagrow{
+      display:flex; gap:6px; flex-wrap:wrap;
+    }
+    .chip{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(229,231,235,.9);
+      background: rgba(249,250,251,.9);
+      color: var(--muted);
+    }
+
+    .statement{
+      margin-top: 10px;
+      border: 1px solid rgba(229,231,235,.9);
+      background: rgba(255,255,255,.92);
+      border-radius: 16px;
+      padding: 16px 14px;
+      font-size: 20px;
+      line-height: 1.45;
+      letter-spacing: -.3px;
+      box-shadow: 0 10px 22px rgba(17,24,39,.06);
+    }
+    .statement .quote{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 10px;
+    }
+
+    .answerRow{
+      margin-top: 14px;
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:stretch;
+    }
+    .big{
+      flex: 1 1 220px;
+      padding: 14px 14px;
+      border-radius: 16px;
+      font-weight: 900;
+      font-size: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      cursor:pointer;
+      transition: transform .05s ease, box-shadow .15s ease, background .15s ease;
+      user-select:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      min-height: 54px;
+    }
+    .big:hover{ box-shadow: 0 12px 28px rgba(17,24,39,.10); }
+    .big:active{ transform: translateY(1px); }
+    .big.o{
+      border-color: rgba(22,163,74,.25);
+      background: rgba(22,163,74,.10);
+      color: var(--ok);
+    }
+    .big.x{
+      border-color: rgba(220,38,38,.25);
+      background: rgba(220,38,38,.08);
+      color: var(--bad);
+    }
+    .big:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none !important;
+      transform:none !important;
+    }
+
+    .navRow{
+      margin-top: 12px;
+      display:flex;
+      gap: 10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .navRow .left{ display:flex; gap:8px; flex-wrap:wrap; }
+    .navRow .right{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+    .mini{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.90);
+      cursor:pointer;
+      font-size: 13px;
+      user-select:none;
+    }
+    .mini.primary{
+      border-color: rgba(37,99,235,.22);
+      background: rgba(37,99,235,.10);
+      color: var(--primary);
+      font-weight: 800;
+    }
+
+    /* Feedback panel */
+    .feedback{
+      margin-top: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(229,231,235,.9);
+      background: rgba(255,255,255,.92);
+      padding: 14px 14px;
+      display:none;
+    }
+    .feedback.show{ display:block; }
+    .feedback.ok{
+      border-color: rgba(22,163,74,.22);
+      background: rgba(22,163,74,.07);
+    }
+    .feedback.bad{
+      border-color: rgba(220,38,38,.22);
+      background: rgba(220,38,38,.06);
+    }
+    .feedback h3{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:-.2px;
+    }
+    .feedback p{
+      margin: 8px 0 0;
+      color: var(--text);
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .feedback .muted{
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+      line-height:1.4;
+    }
+    .fixbox{
+      margin-top: 10px;
+      padding: 10px 10px;
+      border-radius: 14px;
+      border: 1px dashed rgba(220,38,38,.35);
+      background: rgba(255,255,255,.75);
+      font-size: 13px;
+    }
+    .fixbox strong{ color: var(--bad); }
+
+    /* Side panel */
+    .side{
+      padding: 14px 14px 14px;
+    }
+    .side h2{
+      margin:0 0 10px;
+      font-size: 14px;
+      letter-spacing:-.2px;
+    }
+    .statgrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      margin-bottom: 12px;
+    }
+    .stat{
+      border:1px solid rgba(229,231,235,.9);
+      background: rgba(255,255,255,.85);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .stat .k{ font-size: 12px; color: var(--muted); }
+    .stat .v{ margin-top: 6px; font-weight: 900; font-size: 16px; }
+    .list{
+      border:1px solid rgba(229,231,235,.9);
+      background: rgba(255,255,255,.85);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .list .row{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      padding: 8px 6px;
+      border-bottom:1px solid rgba(229,231,235,.75);
+      font-size: 13px;
+    }
+    .list .row:last-child{ border-bottom:none; }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(229,231,235,.95);
+      border:1px solid rgba(229,231,235,.9);
+      flex:0 0 auto;
+    }
+    .dot.ok{ background: rgba(22,163,74,.35); border-color: rgba(22,163,74,.35); }
+    .dot.bad{ background: rgba(220,38,38,.28); border-color: rgba(220,38,38,.28); }
+    .dot.na{ background: rgba(229,231,235,.95); }
+
+    /* Modal */
+    .modal{
+      position: fixed; inset:0;
+      background: rgba(17,24,39,.45);
+      display:none;
+      align-items:center; justify-content:center;
+      padding: 18px;
+      z-index: 999;
+    }
+    .modal.open{ display:flex; }
+    .modalCard{
+      width:min(920px, 96vw);
+      max-height: 90vh;
+      overflow:auto;
+      background: rgba(255,255,255,.97);
+      border: 1px solid rgba(229,231,235,.9);
+      border-radius: 18px;
+      box-shadow: 0 34px 70px rgba(17,24,39,.25);
+    }
+    .modalHead{
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid rgba(229,231,235,.85);
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      flex-wrap:wrap;
+    }
+    .modalHead h3{ margin:0; font-size: 15px; letter-spacing:-.2px; }
+    .modalBody{
+      padding: 12px 14px 14px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    @media (max-width: 760px){
+      .modalBody{ grid-template-columns: 1fr; }
+    }
+    .item{
+      border:1px solid rgba(229,231,235,.9);
+      border-radius: 14px;
+      padding: 10px 10px;
+      background: rgba(249,250,251,.9);
+    }
+    .item .top{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .item .num{
+      font-weight: 900;
+      color: var(--primary);
+    }
+    .item .res{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .item .txt{
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .item .fix{
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(229,231,235,.9);
+      background: rgba(255,255,255,.85);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="header">
+      <div class="title">
+        <div class="mark">OX</div>
+        <div>
+          <h1>맞춤법 OX 퀴즈 · 집중형 UI</h1>
+          <p>
+            한 화면에 1문항씩. 큰 버튼으로 즉시 선택. 단축키 <span class="kbd">O</span>/<span class="kbd">X</span>, 다음 <span class="kbd">Enter</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="toggle" title="교사용 해설을 표시합니다.">
+          교사용 해설
+          <div class="switch" id="swTeacher" aria-label="교사용 해설 토글" role="switch" tabindex="0"></div>
+        </div>
+        <button class="btn primary" id="btnResults">결과/오답노트</button>
+        <button class="btn" id="btnCopy">결과 복사</button>
+        <button class="btn danger" id="btnReset">초기화</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Main quiz -->
+      <div class="card">
+        <div class="status">
+          <div class="status-row">
+            <div class="pill">진행 <strong id="pProgress">0/30</strong></div>
+            <div class="pill">점수 <strong id="pScore">0</strong></div>
+            <div class="pill">정답 <strong id="pOk">0</strong></div>
+            <div class="pill">오답 <strong id="pBad">0</strong></div>
+          </div>
+          <div class="bar"><div id="barFill"></div></div>
+        </div>
+
+        <div class="qwrap">
+          <div class="qno">
+            <div class="left">
+              <div class="badge" id="qBadge">1</div>
+              <div class="qmeta">
+                <div class="main" id="qTitle">문항 1</div>
+                <div class="sub" id="qSub">문장이 맞으면 O, 틀리면 X</div>
+              </div>
+            </div>
+            <div class="tagrow" id="tagRow"></div>
+          </div>
+
+          <div class="statement" id="qText">
+            시작 버튼이 없습니다. 바로 풀면 됩니다.
+            <div class="quote">선택 후 자동으로 피드백이 뜹니다.</div>
+          </div>
+
+          <div class="answerRow">
+            <button class="big o" id="btnO">O (맞다)</button>
+            <button class="big x" id="btnX">X (틀리다)</button>
+          </div>
+
+          <div class="feedback" id="fb">
+            <h3 id="fbTitle">피드백</h3>
+            <p id="fbBody"></p>
+            <div class="fixbox" id="fbFix" style="display:none;"></div>
+            <div class="muted" id="fbWhy" style="display:none;"></div>
+          </div>
+
+          <div class="navRow">
+            <div class="left">
+              <button class="mini" id="btnPrev">이전</button>
+              <button class="mini" id="btnSkip">건너뛰기</button>
+            </div>
+            <div class="right">
+              <button class="mini primary" id="btnNext">다음</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Side panel -->
+      <div class="card">
+        <div class="side">
+          <h2>진행 현황</h2>
+          <div class="statgrid">
+            <div class="stat">
+              <div class="k">현재 문항</div>
+              <div class="v" id="sNow">1</div>
+            </div>
+            <div class="stat">
+              <div class="k">남은 문항</div>
+              <div class="v" id="sLeft">30</div>
+            </div>
+          </div>
+
+          <div class="list" id="miniList" aria-label="문항별 응답 상태">
+            <!-- Filled by JS -->
+          </div>
+
+          <div style="margin-top:12px; color:var(--muted); font-size:12px; line-height:1.45;">
+            팁: 학생용은 해설 OFF로 운영하고, 정답 확인 시간에 교사용 해설 ON으로 전환하면 집중도가 높습니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results modal -->
+  <div class="modal" id="modal">
+    <div class="modalCard" role="dialog" aria-modal="true">
+      <div class="modalHead">
+        <h3>결과 / 오답노트</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="btnOnlyWrong">틀린 것만 보기</button>
+          <button class="btn primary" id="btnClose">닫기</button>
+        </div>
+      </div>
+      <div class="modalBody" id="modalBody"></div>
+    </div>
+  </div>
+
+  <script>
+    // ====== 문제 데이터 (30문항) ======
+    const QUESTIONS = [
+      { id: 1,  text: "“무적권 오늘 한다.”",                      answer: false, fix: "“무조건 오늘 한다.”",                  why: "표준어 형태는 ‘무조건’.", tags:["메신저","밈"]},
+      { id: 2,  text: "“않이, 그건 좀 아닌데.”",                 answer: false, fix: "“아니, 그건 좀 아닌데.”",             why: "감탄·부정의 ‘아니’가 맞음.", tags:["메신저"]},
+      { id: 3,  text: "“고맙읍니다.”",                           answer: false, fix: "“고맙습니다.”",                       why: "종결 표현은 ‘-습니다’ 형태.", tags:["자주 틀림"]},
+      { id: 4,  text: "“괴자번호 알려줘.”",                      answer: false, fix: "“계좌번호 알려줘.”",                  why: "‘계좌(計座)’가 바른 표기.", tags:["생활"]},
+      { id: 5,  text: "“곱셈추위 왔대.”",                        answer: false, fix: "“꽃샘추위 왔대.”",                    why: "봄꽃을 샘낸다는 뜻의 ‘꽃샘추위’.", tags:["계절"]},
+      { id: 6,  text: "“호이에 감사드립니다.”",                  answer: false, fix: "“호의에 감사드립니다.”",              why: "‘호의(好意)’가 바른 표기.", tags:["공손 표현"]},
+      { id: 7,  text: "“남한테 일해라절해라 하지 마.”",          answer: false, fix: "“남한테 이래라저래라 하지 마.”",      why: "관용 표현은 ‘이래라저래라’.", tags:["대화"]},
+      { id: 8,  text: "“지금은 수업 중이라 안 돼.”",             answer: true,  fix: "",                                    why: "부정 부사 ‘안’ + ‘돼(되다)’ 형태로 ‘안 돼’가 자연스러움.", tags:["학교"]},
+      { id: 9,  text: "“이거 이렇게 하면 되.”",                  answer: false, fix: "“이거 이렇게 하면 돼.”",              why: "‘되- + -어’ → ‘돼’(축약).", tags:["되/돼"]},
+      { id:10,  text: "“선생님, 이거 되요?”",                    answer: false, fix: "“선생님, 이거 돼요?”",                why: "‘돼요’가 맞는 활용.", tags:["되/돼","학교"]},
+      { id:11,  text: "“이거 이렇게 하면 돼.”",                  answer: true,  fix: "",                                    why: "‘되다’ 활용의 축약 ‘돼’.", tags:["되/돼"]},
+      { id:12,  text: "“나 왠지 오늘 기분이 이상해.”",          answer: true,  fix: "",                                    why: "‘왠지’가 바른 표기(‘왜인지’에서).", tags:["자주 틀림"]},
+      { id:13,  text: "“나 몇일 전에 그거 봤어.”",               answer: false, fix: "“나 며칠 전에 그거 봤어.”",           why: "‘며칠’이 표준어.", tags:["자주 틀림"]},
+      { id:14,  text: "“진짜 어의없다.”",                        answer: false, fix: "“진짜 어이없다.”",                    why: "형태는 ‘어이없다’.", tags:["댓글","자주 틀림"]},
+      { id:15,  text: "“나 금새 갔다 올게.”",                    answer: false, fix: "“나 금세 갔다 올게.”",                why: "‘금세(금시에)’가 표준.", tags:["자주 틀림"]},
+      { id:16,  text: "“내일 또 뵈요!”",                         answer: false, fix: "“내일 또 봬요!”",                      why: "‘뵈어요’의 준말은 ‘봬요’.", tags:["공손 표현"]},
+      { id:17,  text: "“숙제는 내가 할께.”",                      answer: false, fix: "“숙제는 내가 할게.”",                 why: "‘-ㄹ게’는 된소리로 적지 않음.", tags:["자주 틀림"]},
+      { id:18,  text: "“오랫만에 만나서 반가워.”",               answer: false, fix: "“오랜만에 만나서 반가워.”",           why: "표준어는 ‘오랜만에’.", tags:["대화"]},
+      { id:19,  text: "“퀴즈 정답을 맞췄다!”",                   answer: false, fix: "“퀴즈 정답을 맞혔다!”",               why: "정답은 ‘맞히다’, 시간·약속은 ‘맞추다’(의미 구분).", tags:["퀴즈"]},
+      { id:20,  text: "“책상은 깨끗히 정리해.”",                 answer: false, fix: "“책상은 깨끗이 정리해.”",             why: "부사형은 ‘-이’: 깨끗이.", tags:["학교"]},
+      { id:21,  text: "“어떻게해? 나 지각이야.”",                answer: false, fix: "“어떻게 해? 나 지각이야.”",           why: "‘어떻게’(부사) + ‘해’(동사)는 띄어 씀.", tags:["띄어쓰기"]},
+      { id:22,  text: "“어떡해, 배터리 1%야!”",                  answer: true,  fix: "",                                    why: "‘어떻게 해’의 준말 ‘어떡해’ 가능.", tags:["메신저"]},
+      { id:23,  text: "“저는 2학년 학생예요.”",                  answer: false, fix: "“저는 2학년 학생이에요.”",           why: "받침 뒤에는 ‘이에요’.", tags:["자주 틀림"]},
+      { id:24,  text: "“결국 사과할 수 밖에 없었어.”",           answer: false, fix: "“결국 사과할 수밖에 없었어.”",        why: "‘수밖에’는 붙여 씀.", tags:["띄어쓰기"]},
+      { id:25,  text: "“할수 있다면 지금 해.”",                  answer: false, fix: "“할 수 있다면 지금 해.”",             why: "‘수’는 의존 명사 → 띄어 씀.", tags:["띄어쓰기"]},
+      { id:26,  text: "“이건 너만 알 뿐이야.”",                  answer: true,  fix: "",                                    why: "의존 명사 ‘뿐’: ‘알 뿐’.", tags:["띄어쓰기"]},
+      { id:27,  text: "“미리 말할 껄 그랬어.”",                  answer: false, fix: "“미리 말할 걸 그랬어.”",              why: "‘-ㄹ걸’은 ‘걸’.", tags:["자주 틀림"]},
+      { id:28,  text: "“감기가 완전히 낳았어.”",                 answer: false, fix: "“감기가 완전히 나았어.”",             why: "병이 좋아지다: ‘낫다’(나았다).", tags:["낫다/낳다"]},
+      { id:29,  text: "“급식 먹든지 말든지 선택해.”",            answer: true,  fix: "",                                    why: "선택·나열: ‘-든지’.", tags:["학교"]},
+      { id:30,  text: "“시험 끝나면 게임 한판 하자.”",           answer: false, fix: "“시험 끝나면 게임 한 판 하자.”",       why: "‘판’은 단위 의존 명사 → 띄어 씀.", tags:["게임","띄어쓰기"]},
+    ];
+
+    // ====== 상태 ======
+    const state = {
+      idx: 0,
+      teacher: false,
+      answers: Array(QUESTIONS.length).fill(null), // true(O)/false(X)/null
+      correct: Array(QUESTIONS.length).fill(null),
+      score: 0,
+      onlyWrong: false
+    };
+
+    const KEY = "ox_focus_v1";
+    function save(){ localStorage.setItem(KEY, JSON.stringify(state)); }
+    function load(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        if(!raw) return false;
+        const s = JSON.parse(raw);
+        if(!s || !Array.isArray(s.answers) || s.answers.length !== QUESTIONS.length) return false;
+        Object.assign(state, s);
+        return true;
+      }catch{ return false; }
+    }
+    function clearSave(){ localStorage.removeItem(KEY); }
+
+    // ====== DOM ======
+    const el = (id)=>document.getElementById(id);
+    const swTeacher = el("swTeacher");
+    const btnResults = el("btnResults");
+    const btnCopy = el("btnCopy");
+    const btnReset = el("btnReset");
+
+    const pProgress = el("pProgress");
+    const pScore = el("pScore");
+    const pOk = el("pOk");
+    const pBad = el("pBad");
+    const barFill = el("barFill");
+
+    const qBadge = el("qBadge");
+    const qTitle = el("qTitle");
+    const qText = el("qText");
+    const tagRow = el("tagRow");
+
+    const btnO = el("btnO");
+    const btnX = el("btnX");
+    const btnPrev = el("btnPrev");
+    const btnSkip = el("btnSkip");
+    const btnNext = el("btnNext");
+
+    const fb = el("fb");
+    const fbTitle = el("fbTitle");
+    const fbBody = el("fbBody");
+    const fbFix = el("fbFix");
+    const fbWhy = el("fbWhy");
+
+    const sNow = el("sNow");
+    const sLeft = el("sLeft");
+    const miniList = el("miniList");
+
+    const modal = el("modal");
+    const modalBody = el("modalBody");
+    const btnClose = el("btnClose");
+    const btnOnlyWrong = el("btnOnlyWrong");
+
+    // ====== 렌더링 ======
+    function renderTop(){
+      const done = state.answers.filter(v=>v!==null).length;
+      const ok = state.correct.filter(v=>v===true).length;
+      const bad = state.correct.filter(v=>v===false).length;
+      state.score = ok;
+
+      pProgress.textContent = `${done}/${QUESTIONS.length}`;
+      pScore.textContent = `${state.score}`;
+      pOk.textContent = `${ok}`;
+      pBad.textContent = `${bad}`;
+
+      const pct = Math.round((done/QUESTIONS.length)*100);
+      barFill.style.width = pct + "%";
+
+      sNow.textContent = String(state.idx + 1);
+      sLeft.textContent = String(QUESTIONS.length - done);
+
+      swTeacher.classList.toggle("on", state.teacher);
+      btnOnlyWrong.textContent = state.onlyWrong ? "전체 보기" : "틀린 것만 보기";
+
+      renderMiniList();
+    }
+
+    function renderMiniList(){
+      miniList.innerHTML = "";
+      for(let i=0;i<QUESTIONS.length;i++){
+        const c = state.correct[i];
+        const dotClass = (c===true) ? "ok" : (c===false) ? "bad" : "na";
+        const row = document.createElement("div");
+        row.className = "row";
+        row.style.cursor = "pointer";
+        row.innerHTML = `
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span class="dot ${dotClass}"></span>
+            <strong style="font-size:13px;">${i+1}번</strong>
+          </div>
+          <span style="color:var(--muted); font-size:12px;">
+            ${c===null ? "미응답" : (c ? "정답" : "오답")}
+          </span>
+        `;
+        row.addEventListener("click", ()=>{
+          state.idx = i;
+          hideFeedback();
+          renderQuestion();
+          renderTop();
+          save();
+        });
+        miniList.appendChild(row);
+      }
+    }
+
+    function hideFeedback(){
+      fb.className = "feedback";
+      fb.style.display = "none";
+      fbFix.style.display = "none";
+      fbWhy.style.display = "none";
+    }
+
+    function showFeedback(isCorrect, q){
+      fb.style.display = "block";
+      fb.className = "feedback show " + (isCorrect ? "ok" : "bad");
+      fbTitle.textContent = isCorrect ? "정답입니다." : "오답입니다.";
+      fbBody.textContent = isCorrect
+        ? "다음 문항으로 넘어가세요."
+        : "아래 ‘바른 문장’을 확인하세요.";
+
+      if(!isCorrect && q.fix){
+        fbFix.style.display = "block";
+        fbFix.innerHTML = `<strong>바른 문장</strong><br>${escapeHTML(q.fix)}`;
+      }else{
+        fbFix.style.display = "none";
+      }
+
+      if(state.teacher && q.why){
+        fbWhy.style.display = "block";
+        fbWhy.textContent = "해설: " + q.why;
+      }else{
+        fbWhy.style.display = "none";
+      }
+    }
+
+    function renderQuestion(){
+      const q = QUESTIONS[state.idx];
+      qBadge.textContent = String(q.id);
+      qTitle.textContent = `문항 ${q.id}`;
+      qText.innerHTML = `${escapeHTML(q.text)}<div class="quote">맞으면 O, 틀리면 X</div>`;
+
+      tagRow.innerHTML = "";
+      (q.tags || []).forEach(t=>{
+        const sp = document.createElement("span");
+        sp.className = "chip";
+        sp.textContent = t;
+        tagRow.appendChild(sp);
+      });
+
+      const answered = state.answers[state.idx] !== null;
+      btnO.disabled = answered;
+      btnX.disabled = answered;
+
+      btnPrev.disabled = (state.idx === 0);
+      btnNext.disabled = (state.idx === QUESTIONS.length - 1);
+
+      if(answered){
+        const isCorrect = state.correct[state.idx];
+        showFeedback(isCorrect, q);
+      }else{
+        hideFeedback();
+      }
+    }
+
+    function answer(val){ // val: true(O) false(X)
+      if(state.answers[state.idx] !== null) return;
+      const q = QUESTIONS[state.idx];
+
+      state.answers[state.idx] = val;
+      const isCorrect = (val === q.answer);
+      state.correct[state.idx] = isCorrect;
+
+      renderTop();
+      renderQuestion();
+      save();
+    }
+
+    function next(){
+      if(state.idx < QUESTIONS.length - 1){
+        state.idx += 1;
+        hideFeedback();
+        renderQuestion();
+        renderTop();
+        save();
+      }
+    }
+    function prev(){
+      if(state.idx > 0){
+        state.idx -= 1;
+        hideFeedback();
+        renderQuestion();
+        renderTop();
+        save();
+      }
+    }
+    function skip(){
+      // 미응답이면 넘어가기만
+      next();
+    }
+
+    function openResults(){
+      modalBody.innerHTML = "";
+      QUESTIONS.forEach((q,i)=>{
+        const ua = state.answers[i];
+        const ok = state.correct[i];
+        if(state.onlyWrong && ok !== false) return;
+
+        const item = document.createElement("div");
+        item.className = "item";
+        const uaText = ua===null ? "-" : (ua ? "O" : "X");
+        const okText = ok===null ? "미응답" : (ok ? "정답" : "오답");
+        item.innerHTML = `
+          <div class="top">
+            <div class="num">${q.id}번</div>
+            <div class="res">내 답: ${uaText} · ${okText}</div>
+          </div>
+          <div class="txt">${escapeHTML(stripQuotes(q.text))}</div>
+          ${ok===false && q.fix ? `<div class="fix">정답 예시: ${escapeHTML(stripQuotes(q.fix))}</div>` : ``}
+          ${state.teacher && q.why ? `<div class="fix">해설: ${escapeHTML(q.why)}</div>` : ``}
+        `;
+        item.addEventListener("click", ()=>{
+          state.idx = i;
+          modal.classList.remove("open");
+          hideFeedback();
+          renderQuestion();
+          renderTop();
+          save();
+        });
+        modalBody.appendChild(item);
+      });
+      modal.classList.add("open");
+    }
+    function closeResults(){ modal.classList.remove("open"); }
+
+    function copyResults(){
+      const lines = [];
+      const ok = state.correct.filter(v=>v===true).length;
+      const bad = state.correct.filter(v=>v===false).length;
+      lines.push(`맞춤법 OX 퀴즈 결과`);
+      lines.push(`점수: ${ok}/${QUESTIONS.length} (정답 ${ok}, 오답 ${bad})`);
+      lines.push(`--------------------------------`);
+      QUESTIONS.forEach((q,i)=>{
+        const ua = state.answers[i];
+        const okv = state.correct[i];
+        const uaText = ua===null ? "-" : (ua ? "O" : "X");
+        const okText = okv===null ? "미응답" : (okv ? "정답" : "오답");
+        lines.push(`${q.id}. ${stripQuotes(q.text)} | 내 답:${uaText} | ${okText}${(okv===false && q.fix) ? " | 정답예시:" + stripQuotes(q.fix) : ""}`);
+      });
+      const txt = lines.join("\n");
+      navigator.clipboard.writeText(txt).then(()=>{
+        alert("결과를 클립보드에 복사했습니다.");
+      }).catch(()=>{
+        prompt("복사에 실패했어요. 아래 내용을 수동으로 복사하세요.", txt);
+      });
+    }
+
+    function resetAll(){
+      if(!confirm("진행 상황을 초기화할까요?")) return;
+      state.idx = 0;
+      state.teacher = false;
+      state.answers = Array(QUESTIONS.length).fill(null);
+      state.correct = Array(QUESTIONS.length).fill(null);
+      state.score = 0;
+      state.onlyWrong = false;
+      clearSave();
+      hideFeedback();
+      renderQuestion();
+      renderTop();
+    }
+
+    function toggleTeacher(){
+      state.teacher = !state.teacher;
+      // 현재 피드백이 표시 중이면 해설 영역만 즉시 반영
+      if(state.answers[state.idx] !== null){
+        const q = QUESTIONS[state.idx];
+        showFeedback(state.correct[state.idx], q);
+      }
+      renderTop();
+      save();
+    }
+
+    function escapeHTML(s){
+      return String(s).replace(/[&<>"']/g, (m)=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[m]));
+    }
+    function stripQuotes(s){ return String(s).replace(/[“”"]/g,""); }
+
+    // ====== 이벤트 ======
+    btnO.addEventListener("click", ()=>answer(true));
+    btnX.addEventListener("click", ()=>answer(false));
+    btnNext.addEventListener("click", next);
+    btnPrev.addEventListener("click", prev);
+    btnSkip.addEventListener("click", skip);
+
+    swTeacher.addEventListener("click", toggleTeacher);
+    swTeacher.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleTeacher(); }});
+
+    btnResults.addEventListener("click", openResults);
+    btnClose.addEventListener("click", closeResults);
+    btnOnlyWrong.addEventListener("click", ()=>{
+      state.onlyWrong = !state.onlyWrong;
+      renderTop();
+      save();
+      openResults();
+    });
+
+    btnCopy.addEventListener("click", copyResults);
+    btnReset.addEventListener("click", resetAll);
+
+    modal.addEventListener("click", (e)=>{ if(e.target === modal) closeResults(); });
+
+    document.addEventListener("keydown", (e)=>{
+      if(modal.classList.contains("open")){
+        if(e.key === "Escape") closeResults();
+        return;
+      }
+      const k = e.key.toLowerCase();
+      if(k === "o") answer(true);
+      if(k === "x") answer(false);
+      if(e.key === "Enter") next();
+      if(e.key === "ArrowRight") next();
+      if(e.key === "ArrowLeft") prev();
+    });
+
+    // ====== 초기화 ======
+    load();
+    hideFeedback();
+    renderQuestion();
+    renderTop();
+    save();
+  </script>
+</body>
+</html>
